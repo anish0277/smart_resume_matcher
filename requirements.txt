@@ -1,0 +1,4 @@
+flask
+crewai
+werkzeug
+pyyaml

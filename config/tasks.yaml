@@ -1,0 +1,31 @@
+resume_analysis:
+  agent: resume_analyst
+  description: >
+    Read the resume text and extract skills, tools, experience, projects, and education.
+  expected_output: >
+    Markdown section titled 'Resume Analysis' listing skills, experience,
+    projects and education.
+
+jd_analysis:
+  agent: jd_analyst
+  description: >
+    Read the job description and extract required skills, preferred skills,
+    responsibilities and role level.
+  expected_output: >
+    Markdown section titled 'Job Description Analysis' summarizing requirements.
+
+matching:
+  agent: matching_specialist
+  description: >
+    Compare 'Resume Analysis' and 'Job Description Analysis' to compute a
+    match score, matched and missing skills.
+  expected_output: >
+    Markdown section titled 'Match Summary' with score and skill breakdown.
+
+interview_prep:
+  agent: interview_coach
+  description: >
+    Based on resume, job description and match summary, generate interview
+    questions and answers plus resume improvement tips.
+  expected_output: >
+    Markdown section titled 'Interview Preparation'.

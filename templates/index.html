@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <h2 class="card-title mb-3">Upload Resume & Paste Job Description</h2>
+        <p class="text-muted">
+          This tool uses Agentic AI (multi‑agent CrewAI pipeline) to analyze your resume,
+          understand the job description, compute a match score, and generate interview questions.
+        </p>
+
+        <form method="POST" enctype="multipart/form-data">
+          <div class="mb-3">
+            <label for="resume" class="form-label">Resume File (PDF / TXT / DOCX)</label>
+            <input
+              class="form-control"
+              type="file"
+              id="resume"
+              name="resume"
+              required
+            />
+          </div>
+
+          <div class="mb-3">
+            <label for="job_description" class="form-label">Job Description</label>
+            <textarea
+              class="form-control"
+              id="job_description"
+              name="job_description"
+              rows="8"
+              placeholder="Paste the job description here..."
+              required
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Run Agentic Matching
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
