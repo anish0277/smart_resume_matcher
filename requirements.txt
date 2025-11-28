@@ -1,6 +1,7 @@
 flask
-crewai
+crewai[google-genai]==1.6.0
 werkzeug
 pyyaml
 gunicorn
-
+pdfplumber
+python-dotenv
