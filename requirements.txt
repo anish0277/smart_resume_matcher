@@ -2,3 +2,5 @@ flask
 crewai
 werkzeug
 pyyaml
+gunicorn
+
