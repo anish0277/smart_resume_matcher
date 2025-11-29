@@ -1,15 +1,13 @@
 from textwrap import dedent
-from typing import Dict
+from typing import Dict, Any
 import os
 
 from crewai import Agent, Task, Crew, Process, LLM
+from dotenv import load_dotenv
 
-from dotenv import load_dotenv          # ✅ add this
 load_dotenv()
 
-
 # Configure Gemini LLM for CrewAI
-# This uses the GEMINI_API_KEY you set in your environment.
 gemini_llm = LLM(
     model="gemini/gemini-2.0-flash",
     api_key=os.getenv("GOOGLE_API_KEY"),
@@ -23,7 +21,6 @@ class ResumeMatcherCrew:
     """
 
     def __init__(self):
-        # Define agents with the same Gemini LLM
         self.resume_analyst = Agent(
             role="Resume Analyst",
             goal="Extract clear, structured information from the candidate's resume.",
@@ -84,8 +81,8 @@ class ResumeMatcherCrew:
         )
 
     def build_crew(self, resume_text: str, job_description: str) -> Crew:
-        # Tasks
-        resume_task = Task(
+        # Define tasks in fixed order
+        self.resume_task = Task(
             description=dedent(
                 f"""
                 Read the following resume text and extract:
@@ -108,7 +105,7 @@ class ResumeMatcherCrew:
             ),
         )
 
-        jd_task = Task(
+        self.jd_task = Task(
             description=dedent(
                 f"""
                 Read the following job description and extract:
@@ -127,7 +124,7 @@ class ResumeMatcherCrew:
             expected_output="A markdown section titled 'Job Description Analysis' summarizing requirements.",
         )
 
-        match_task = Task(
+        self.match_task = Task(
             description=dedent(
                 """
                 Using the 'Resume Analysis' and 'Job Description Analysis' produced earlier,
@@ -158,10 +155,10 @@ class ResumeMatcherCrew:
             ),
             agent=self.matching_specialist,
             expected_output="A markdown report titled 'Match Summary' with score and skill breakdown.",
-            context=[resume_task, jd_task],
+            context=[self.resume_task, self.jd_task],
         )
 
-        interview_task = Task(
+        self.interview_task = Task(
             description=dedent(
                 """
                 Based on the previous analyses and match summary, generate tailored interview preparation:
@@ -188,7 +185,7 @@ class ResumeMatcherCrew:
             ),
             agent=self.interview_coach,
             expected_output="A markdown section titled 'Interview Preparation' with questions and suggestions.",
-            context=[resume_task, jd_task, match_task],
+            context=[self.resume_task, self.jd_task, self.match_task],
         )
 
         crew = Crew(
@@ -198,7 +195,12 @@ class ResumeMatcherCrew:
                 self.matching_specialist,
                 self.interview_coach,
             ],
-            tasks=[resume_task, jd_task, match_task, interview_task],
+            tasks=[
+                self.resume_task,
+                self.jd_task,
+                self.match_task,
+                self.interview_task,
+            ],
             process=Process.sequential,
             verbose=True,
         )
@@ -206,12 +208,34 @@ class ResumeMatcherCrew:
 
     def run(self, resume_text: str, job_description: str) -> Dict[str, str]:
         """
-        Runs the full pipeline and returns a dict with
-        combined markdown and useful extracted pieces.
+        Runs the full pipeline and returns a dict with:
+        - combined markdown
+        - each individual section (resume, JD, match, interview)
         """
         crew = self.build_crew(resume_text, job_description)
-        result_markdown = crew.kickoff()
+        crew_output = crew.kickoff()   # CrewOutput object
+
+        # Safely read each task's raw markdown
+        tasks_out = crew_output.tasks_output  # list of TaskOutput
+
+        resume_md = tasks_out[0].raw if len(tasks_out) > 0 else ""
+        jd_md = tasks_out[1].raw if len(tasks_out) > 1 else ""
+        match_md = tasks_out[2].raw if len(tasks_out) > 2 else ""
+        interview_md = tasks_out[3].raw if len(tasks_out) > 3 else crew_output.raw
+
+        combined_md = "\n\n".join(
+            [
+                resume_md or "",
+                jd_md or "",
+                match_md or "",
+                interview_md or "",
+            ]
+        ).strip()
 
         return {
-            "full_markdown": str(result_markdown),
+            "full_markdown": combined_md,
+            "resume_analysis": resume_md,
+            "jd_analysis": jd_md,
+            "match_summary": match_md,
+            "interview_prep": interview_md,
         }
